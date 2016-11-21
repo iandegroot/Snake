@@ -1,0 +1,1 @@
+Learning to use PyGame with the classic snake game.
