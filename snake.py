@@ -18,7 +18,18 @@ BLACK = (0, 0, 0)
 pygame.init()
 
 BIG_SCORE = pygame.font.SysFont("arial black", 350)
-TITLE = pygame.font.SysFont("arial black", 50)
+TEXT = pygame.font.Font(r"resources\fonts\square-deal.ttf", 150)
+
+def rand_color():
+    return (randint(5, 255), randint(5, 255), randint(5, 255))
+
+# Class for creating multi-color text
+class MultiColorText:
+
+    def __init__(self, text):
+        self.chars = [TEXT.render(c, True, rand_color()) for c in text]
+        self.char_w = self.chars[0].get_width()
+        self.char_h = self.chars[0].get_height()
 
 # Contains the coordinates of each individual part of the snake
 class Segment:
@@ -98,7 +109,7 @@ class Food:
         self.width = 8
         self.height = 8
         self.piece = pygame.Rect(randint(0, screen_width - self.width), randint(0, screen_height - self.height), self.width, self.height)
-        self.color = (randint(5, 255), randint(5, 255), randint(5, 255))
+        self.color = rand_color()
 
     # Draw the piece of food on the given surface
     def draw(self, surface):
@@ -115,10 +126,15 @@ class Game:
         self.state = "menu"
         self.score_color = GRAY
 
-    def menu(self, menu_text, mt_w, mt_h):
-        self.screen.fill((0, 255, 0))
+    def menu(self, title_text):
+        self.screen.fill((0, 0, 0))
 
-        self.screen.blit(menu_text, ((screen_width / 2) - (mt_w / 2), (screen_height / 2) - (mt_h / 2)))
+        #self.screen.blit(menu_text, ((screen_width / 2) - (mt_w / 2), (15)))
+        self.screen.blit(title_text.chars[0], ((screen_width / 2) - (title_text.char_w * 2.5), (10)))
+        self.screen.blit(title_text.chars[1], ((screen_width / 2) - (title_text.char_w * 1.5), (10)))
+        self.screen.blit(title_text.chars[2], ((screen_width / 2) - (title_text.char_w * 0.5), (10)))
+        self.screen.blit(title_text.chars[3], ((screen_width / 2) + (title_text.char_w * 0.5), (10)))
+        self.screen.blit(title_text.chars[4], ((screen_width / 2) + (title_text.char_w * 1.5), (10)))
         #screen.blit(menu_title, (50, 100))
 
         # Check for any events (button presses and Xing out)
@@ -191,14 +207,10 @@ is_running = True
 
 game = Game()
 
-menu_title = TITLE.render("Press enter to play", True, BLACK)
-mt_w = menu_title.get_width()
-mt_h = menu_title.get_height()
-
 while is_running:
 
     if game.state == "menu":
-        is_running = game.menu(menu_title, mt_w, mt_h)
+        is_running = game.menu(MultiColorText("SNAKE"))
 
 
     elif game.state == "play":
