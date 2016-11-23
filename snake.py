@@ -1,6 +1,7 @@
 #! /usr/bin/python
 
 import pygame
+import snake_utils as utils
 from random import randint
 
 # Setup globals
@@ -18,18 +19,17 @@ BLACK = (0, 0, 0)
 pygame.init()
 
 BIG_SCORE = pygame.font.SysFont("arial black", 350)
-TEXT = pygame.font.Font(r"resources\fonts\square-deal.ttf", 150)
 
-def rand_color():
-    return (randint(5, 255), randint(5, 255), randint(5, 255))
+# def rand_color():
+#     return (randint(5, 255), randint(5, 255), randint(5, 255))
 
-# Class for creating multi-color text
-class MultiColorText:
+# # Class for creating multi-color text
+# class MultiColorText:
 
-    def __init__(self, text):
-        self.chars = [TEXT.render(c, True, rand_color()) for c in text]
-        self.char_w = self.chars[0].get_width()
-        self.char_h = self.chars[0].get_height()
+#     def __init__(self, text, font):
+#         self.chars = [font.render(c, True, rand_color()) for c in text]
+#         self.char_w = self.chars[0].get_width()
+#         self.char_h = self.chars[0].get_height()
 
 # Contains the coordinates of each individual part of the snake
 class Segment:
@@ -109,7 +109,7 @@ class Food:
         self.width = 8
         self.height = 8
         self.piece = pygame.Rect(randint(0, screen_width - self.width), randint(0, screen_height - self.height), self.width, self.height)
-        self.color = rand_color()
+        self.color = utils.rand_color()
 
     # Draw the piece of food on the given surface
     def draw(self, surface):
@@ -210,7 +210,7 @@ game = Game()
 while is_running:
 
     if game.state == "menu":
-        is_running = game.menu(MultiColorText("SNAKE"))
+        is_running = game.menu(utils.MultiColorText("SNAKE", pygame.font.Font(r"resources\fonts\square-deal.ttf", 150)))
 
 
     elif game.state == "play":
