@@ -74,7 +74,7 @@ class Snake:
 
     # Check if the snake has crashed into itself or the walls, return True if it has
     def crash(self):
-        if self.body[0].block.x <= 0 or self.body[0].block.x >= screen_width or self.body[0].block.y <= 0 or self.body[0].block.y >= screen_height:
+        if self.body[0].block.x <= 0 or self.body[0].block.x >= SCREEN_WIDTH or self.body[0].block.y <= 0 or self.body[0].block.y >= SCREEN_HEIGHT:
             return True
 
         # Check if the snake hit itself
@@ -108,7 +108,7 @@ class Food:
     def __init__(self):
         self.width = 8
         self.height = 8
-        self.piece = pygame.Rect(randint(0, screen_width - self.width), randint(0, screen_height - self.height), self.width, self.height)
+        self.piece = pygame.Rect(randint(0, SCREEN_WIDTH - self.width), randint(0, SCREEN_HEIGHT - self.height), self.width, self.height)
         self.color = utils.rand_color()
 
     # Draw the piece of food on the given surface
@@ -125,17 +125,33 @@ class Game:
         self.food = None
         self.state = "menu"
         self.score_color = GRAY
+        self.menu_options = ["play", "high_scores"]
+        self.sel_option = 0
+        self.sel_size = 10
 
-    def menu(self, title_text):
+    def menu(self):
         self.screen.fill((0, 0, 0))
 
-        #self.screen.blit(menu_text, ((screen_width / 2) - (mt_w / 2), (15)))
-        self.screen.blit(title_text.chars[0], ((screen_width / 2) - (title_text.char_w * 2.5), (10)))
-        self.screen.blit(title_text.chars[1], ((screen_width / 2) - (title_text.char_w * 1.5), (10)))
-        self.screen.blit(title_text.chars[2], ((screen_width / 2) - (title_text.char_w * 0.5), (10)))
-        self.screen.blit(title_text.chars[3], ((screen_width / 2) + (title_text.char_w * 0.5), (10)))
-        self.screen.blit(title_text.chars[4], ((screen_width / 2) + (title_text.char_w * 1.5), (10)))
-        #screen.blit(menu_title, (50, 100))
+        # Display the title text on the screen
+        title_text = utils.MultiColorText("SNAKE", pygame.font.Font(r"resources\fonts\square-deal.ttf", 150))
+
+        self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), 10))
+
+        # Display the play option on the screen
+        title_text = utils.MultiColorText("PLAY", pygame.font.Font(r"resources\fonts\square-deal.ttf", 50))
+
+        self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), (SCREEN_HEIGHT / 2) - (title_text.full_text.get_height() / 2)))
+
+        if (self.sel_option == 0):
+            pygame.draw.rect(self.screen, utils.rand_color(), ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2) - (title_text.char_w), (SCREEN_HEIGHT / 2) - (title_text.full_text.get_height() / 2) + (title_text.char_h / 2) - self.sel_size, self.sel_size, self.sel_size))
+
+        # Display the high-scores option on the screen
+        title_text = utils.MultiColorText("HIGH SCORES", pygame.font.Font(r"resources\fonts\square-deal.ttf", 50))
+
+        self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), (SCREEN_HEIGHT / 2) + (title_text.full_text.get_height() / 2)))
+
+        if (self.sel_option == 1):
+            pygame.draw.rect(self.screen, utils.rand_color(), ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2) - (title_text.char_w), (SCREEN_HEIGHT / 2) + (title_text.full_text.get_height() / 2) + (title_text.char_h / 2) - self.sel_size, self.sel_size, self.sel_size))
 
         # Check for any events (button presses and Xing out)
         for event in pygame.event.get():
@@ -143,9 +159,22 @@ class Game:
                 return False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
-                    self.state = "play"
-                    self.snake = Snake(screen_width / 2, screen_height / 2)
-                    self.food = Food()
+                    if self.sel_option == 0:
+                        self.state = "play"
+                        self.snake = Snake(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+                        self.food = Food()
+                    elif self.sel_option == 1:
+                        print "Go to high scores page"
+                elif event.key == pygame.K_UP:
+                    if self.sel_option > 0:
+                        self.sel_option -= 1
+                    elif self.sel_option == 0:
+                        self.sel_option = len(self.menu_options) - 1
+                elif event.key == pygame.K_DOWN:
+                    if self.sel_option < 1:
+                        self.sel_option += 1
+                    elif self.sel_option == len(self.menu_options) - 1:
+                        self.sel_option = 0
                 elif event.key == pygame.K_ESCAPE:
                     return False
         return True
@@ -198,8 +227,8 @@ class Game:
 
 
 
-screen_width = 640
-screen_height = 400
+SCREEN_WIDTH = 640
+SCREEN_HEIGHT = 400
 
 
 clock = pygame.time.Clock()
@@ -210,13 +239,13 @@ game = Game()
 while is_running:
 
     if game.state == "menu":
-        is_running = game.menu(utils.MultiColorText("SNAKE", pygame.font.Font(r"resources\fonts\square-deal.ttf", 150)))
-
-
+        fps = 10
+        is_running = game.menu()
     elif game.state == "play":
+        fps = 30
         is_running = game.run()
 
     pygame.display.flip()
-    # Limit the frame rate to 30 frames per second
-    clock.tick(30)
+    # Limit the frame rate to fps frames per second
+    clock.tick(fps)
 
