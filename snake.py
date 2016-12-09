@@ -1,6 +1,7 @@
 #! /usr/bin/python
 
 import pygame
+import shelve
 import snake_utils as utils
 from random import randint
 
@@ -19,17 +20,6 @@ BLACK = (0, 0, 0)
 pygame.init()
 
 BIG_SCORE = pygame.font.SysFont("arial black", 350)
-
-# def rand_color():
-#     return (randint(5, 255), randint(5, 255), randint(5, 255))
-
-# # Class for creating multi-color text
-# class MultiColorText:
-
-#     def __init__(self, text, font):
-#         self.chars = [font.render(c, True, rand_color()) for c in text]
-#         self.char_w = self.chars[0].get_width()
-#         self.char_h = self.chars[0].get_height()
 
 # Contains the coordinates of each individual part of the snake
 class Segment:
@@ -115,6 +105,13 @@ class Food:
     def draw(self, surface):
         pygame.draw.rect(surface, self.color, self.piece)
 
+# Contains information about high scores
+class Score:
+
+    def __init__(self):
+        self.name = "aaa"
+        self.score = 0
+
 class Game:
 
     def __init__(self):
@@ -128,6 +125,9 @@ class Game:
         self.menu_options = ["play", "high_scores"]
         self.sel_option = 0
         self.sel_size = 10
+        self.high_scores = [Score() for _ in xrange(5)]
+        self.new_name = "???"
+        self.new_name_index = 0
 
     def menu(self):
         self.screen.fill((0, 0, 0))
@@ -143,7 +143,7 @@ class Game:
         self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), (SCREEN_HEIGHT / 2) - (title_text.full_text.get_height() / 2)))
 
         if (self.sel_option == 0):
-            pygame.draw.rect(self.screen, utils.rand_color(), ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2) - (title_text.char_w), (SCREEN_HEIGHT / 2) - (title_text.full_text.get_height() / 2) + (title_text.char_h / 2) - self.sel_size, self.sel_size, self.sel_size))
+            pygame.draw.rect(self.screen, utils.rand_color(), ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2) - (title_text.char_ws[0]), (SCREEN_HEIGHT / 2) - (title_text.full_text.get_height() / 2) + (title_text.char_h / 2) - self.sel_size, self.sel_size, self.sel_size))
 
         # Display the high-scores option on the screen
         title_text = utils.MultiColorText("HIGH SCORES", pygame.font.Font(r"resources\fonts\square-deal.ttf", 50))
@@ -151,7 +151,7 @@ class Game:
         self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), (SCREEN_HEIGHT / 2) + (title_text.full_text.get_height() / 2)))
 
         if (self.sel_option == 1):
-            pygame.draw.rect(self.screen, utils.rand_color(), ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2) - (title_text.char_w), (SCREEN_HEIGHT / 2) + (title_text.full_text.get_height() / 2) + (title_text.char_h / 2) - self.sel_size, self.sel_size, self.sel_size))
+            pygame.draw.rect(self.screen, utils.rand_color(), ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2) - (title_text.char_ws[0]), (SCREEN_HEIGHT / 2) + (title_text.full_text.get_height() / 2) + (title_text.char_h / 2) - self.sel_size, self.sel_size, self.sel_size))
 
         # Check for any events (button presses and Xing out)
         for event in pygame.event.get():
@@ -164,7 +164,7 @@ class Game:
                         self.snake = Snake(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
                         self.food = Food()
                     elif self.sel_option == 1:
-                        print "Go to high scores page"
+                        self.state = "scores"
                 elif event.key == pygame.K_UP:
                     if self.sel_option > 0:
                         self.sel_option -= 1
@@ -183,8 +183,13 @@ class Game:
         self.snake.move()
 
         if self.snake.crash():
-            print "Crash!"
-            self.state = "menu"
+            # If the new score is better than the lowest high score, and the new score to the high scores list
+            if self.snake.score > self.high_scores[4].score:
+                print "Crash!"
+                self.state = "new_score"
+            else:
+                print "Crash!"
+                self.state = "menu"
 
         # If the snake hits the food, create a new piece at a difference location
         # Also add onto the snake
@@ -225,6 +230,85 @@ class Game:
         return True
 
 
+    def scores(self):
+        self.screen.fill((0, 0, 0))
+
+        # Display the title text on the screen
+        title_text = utils.MultiColorText("HIGH SCORES", pygame.font.Font(r"resources\fonts\square-deal.ttf", 100))
+
+        self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), 10))
+
+        for i in xrange(5):
+            # Display high scores on the screen
+            title_text = utils.MultiColorText(str(self.high_scores[i].score).zfill(5) + " " + self.high_scores[i].name, pygame.font.Font(r"resources\fonts\square-deal.ttf", 50))
+            self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), (SCREEN_HEIGHT * 0.30) + (i * title_text.char_h)))
+
+        # Check for any events (button presses and Xing out)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    self.state = "menu"
+                elif event.key == pygame.K_ESCAPE:
+                    self.state = "menu"
+
+        return True
+
+
+    def new_score(self):
+        self.screen.fill((0, 0, 0))
+
+        # Display the title text on the screen
+        title_text = utils.MultiColorText("NEW HIGH SCORE!", pygame.font.Font(r"resources\fonts\square-deal.ttf", 80))
+
+        self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), 10))
+
+        # Display the instruction text on the screen
+        title_text = utils.MultiColorText("Enter name below", pygame.font.Font(r"resources\fonts\square-deal.ttf", 50))
+
+        self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), (SCREEN_HEIGHT * 0.30)))
+
+        # Display the name on the screen
+        title_text = utils.MultiColorText(self.new_name, pygame.font.Font(r"resources\fonts\square-deal.ttf", 50))
+
+        self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), (SCREEN_HEIGHT * 0.50)))
+
+        # Display the instruction text on the screen
+        title_text = utils.MultiColorText("and press enter", pygame.font.Font(r"resources\fonts\square-deal.ttf", 50))
+
+        self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), (SCREEN_HEIGHT * 0.70)))
+
+        # Check for any events (button presses and Xing out)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    self.state = "scores"
+                elif event.key == pygame.K_ESCAPE:
+                    # Don't do anything if escape is pressed
+                    pass
+                elif event.key == pygame.K_BACKSPACE:
+                    # Move the cursor back one
+                    if self.new_name_index > 0:
+                        self.new_name_index -= 1
+                        tmp_str = list(self.new_name)
+                        tmp_str[self.new_name_index] = "?"
+                        self.new_name = "".join(tmp_str)
+                else:
+                    # Only add the input character if it's an alphanumeric and if the name is not already full
+                    if pygame.key.name(event.key).isalnum() and self.new_name_index < 3:
+                        # Add the typed character
+                        # Need to create a new string because strings are immutable (can't be changed in place)
+                        tmp_str = list(self.new_name)
+                        tmp_str[self.new_name_index] = pygame.key.name(event.key)
+                        self.new_name = "".join(tmp_str)
+                        self.new_name_index += 1
+
+        return True
+
+
 
 
 SCREEN_WIDTH = 640
@@ -244,6 +328,12 @@ while is_running:
     elif game.state == "play":
         fps = 30
         is_running = game.run()
+    elif game.state == "scores":
+        fps = 10
+        is_running = game.scores()
+    elif game.state == "new_score":
+        fps = 10
+        is_running = game.new_score()
 
     pygame.display.flip()
     # Limit the frame rate to fps frames per second
