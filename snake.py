@@ -109,7 +109,7 @@ class Food:
 class Score:
 
     def __init__(self):
-        self.name = "aaa"
+        self.name = "???"
         self.score = 0
 
 class Game:
@@ -284,9 +284,42 @@ class Game:
             if event.type == pygame.QUIT:
                 return False
             elif event.type == pygame.KEYDOWN:
+                # When the name is entered update the correct score
                 if event.key == pygame.K_RETURN:
+                    found_new_score_pos = False
+                    prev_name = ""
+                    prev_score = 0
+                    for s in self.high_scores:
+
+                        # Once the position for the new high score has been found, shift the scores below it down
+                        if found_new_score_pos:
+                            # Save the score and name before they are overwritten so they can be passed down to the next spot
+                            tmp_prev_name = s.name
+                            tmp_prev_score = s.score
+                            s.name = prev_name
+                            s.score = prev_score
+                            prev_name = tmp_prev_name
+                            prev_score = tmp_prev_score
+
+                        if self.snake.score > s.score and not found_new_score_pos:
+                            # Save the score and name before they are overwritten so they can be passed down to the next spot
+                            prev_name = s.name
+                            prev_score = s.score
+                            s.name = self.new_name
+                            s.score = self.snake.score
+                            # Reset the new name and index
+                            self.new_name = "???"
+                            self.new_name_index = 0
+                            # Set the flag to shift the rest of the high scores down
+                            found_new_score_pos = True
+
+                    # Switch to the high-scores list
                     self.state = "scores"
-                elif event.key == pygame.K_ESCAPE:
+                elif (event.key == pygame.K_ESCAPE or 
+                     event.key == pygame.K_UP or 
+                     event.key == pygame.K_DOWN or 
+                     event.key == pygame.K_RIGHT or 
+                     event.key == pygame.K_LEFT):
                     # Don't do anything if escape is pressed
                     pass
                 elif event.key == pygame.K_BACKSPACE:
