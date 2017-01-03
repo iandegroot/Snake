@@ -2,6 +2,7 @@
 
 import pygame
 import shelve
+import os
 import snake_utils as utils
 from random import randint
 
@@ -15,6 +16,10 @@ WHITE = (255, 255, 255)
 GRAY = (50, 50, 50)
 GOLD = (255, 223, 0)
 BLACK = (0, 0, 0)
+
+SNAKE_DIR = os.path.dirname(os.path.realpath(__file__))
+FONT_FILE = SNAKE_DIR + r"\resources\fonts\square-deal.ttf"
+SAVE_FILE = SNAKE_DIR + r"\resources\high_scores\scores"
 
 # Initialize pygame and the font to be used for the score
 pygame.init()
@@ -133,12 +138,12 @@ class Game:
         self.screen.fill((0, 0, 0))
 
         # Display the title text on the screen
-        title_text = utils.MultiColorText("SNAKE", pygame.font.Font(r"resources\fonts\square-deal.ttf", 150))
+        title_text = utils.MultiColorText("SNAKE", pygame.font.Font(FONT_FILE, 150))
 
         self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), 10))
 
         # Display the play option on the screen
-        title_text = utils.MultiColorText("PLAY", pygame.font.Font(r"resources\fonts\square-deal.ttf", 50))
+        title_text = utils.MultiColorText("PLAY", pygame.font.Font(FONT_FILE, 50))
 
         self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), (SCREEN_HEIGHT / 2) - (title_text.full_text.get_height() / 2)))
 
@@ -146,7 +151,7 @@ class Game:
             pygame.draw.rect(self.screen, utils.rand_color(), ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2) - (title_text.char_ws[0]), (SCREEN_HEIGHT / 2) - (title_text.full_text.get_height() / 2) + (title_text.char_h / 2) - self.sel_size, self.sel_size, self.sel_size))
 
         # Display the high-scores option on the screen
-        title_text = utils.MultiColorText("HIGH SCORES", pygame.font.Font(r"resources\fonts\square-deal.ttf", 50))
+        title_text = utils.MultiColorText("HIGH SCORES", pygame.font.Font(FONT_FILE, 50))
 
         self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), (SCREEN_HEIGHT / 2) + (title_text.full_text.get_height() / 2)))
 
@@ -200,10 +205,6 @@ class Game:
         self.screen.fill((0, 0, 0))
         
         # Print the score to the screen, underneath (before) the snake and food
-        if self.snake.score != 0 and self.snake.score % 10 == 0:
-            self.score_color = GOLD
-        else:
-            self.score_color = GRAY
         label = BIG_SCORE.render(str(self.snake.score).zfill(2), True, self.score_color)
         self.screen.blit(label, (75, -65))
 
@@ -234,13 +235,13 @@ class Game:
         self.screen.fill((0, 0, 0))
 
         # Display the title text on the screen
-        title_text = utils.MultiColorText("HIGH SCORES", pygame.font.Font(r"resources\fonts\square-deal.ttf", 100))
+        title_text = utils.MultiColorText("HIGH SCORES", pygame.font.Font(FONT_FILE, 100))
 
         self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), 10))
 
         for i in xrange(5):
             # Display high scores on the screen
-            title_text = utils.MultiColorText(str(self.high_scores[i].score).zfill(5) + " " + self.high_scores[i].name, pygame.font.Font(r"resources\fonts\square-deal.ttf", 50))
+            title_text = utils.MultiColorText(str(self.high_scores[i].score).zfill(5) + " " + self.high_scores[i].name, pygame.font.Font(FONT_FILE, 50))
             self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), (SCREEN_HEIGHT * 0.30) + (i * title_text.char_h)))
 
         # Check for any events (button presses and Xing out)
@@ -260,22 +261,22 @@ class Game:
         self.screen.fill((0, 0, 0))
 
         # Display the title text on the screen
-        title_text = utils.MultiColorText("NEW HIGH SCORE!", pygame.font.Font(r"resources\fonts\square-deal.ttf", 80))
+        title_text = utils.MultiColorText("NEW HIGH SCORE!", pygame.font.Font(FONT_FILE, 80))
 
         self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), 10))
 
         # Display the instruction text on the screen
-        title_text = utils.MultiColorText("Enter name below", pygame.font.Font(r"resources\fonts\square-deal.ttf", 50))
+        title_text = utils.MultiColorText("Enter name below", pygame.font.Font(FONT_FILE, 50))
 
         self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), (SCREEN_HEIGHT * 0.30)))
 
         # Display the name on the screen
-        title_text = utils.MultiColorText(self.new_name, pygame.font.Font(r"resources\fonts\square-deal.ttf", 50))
+        title_text = utils.MultiColorText(self.new_name, pygame.font.Font(FONT_FILE, 50))
 
         self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), (SCREEN_HEIGHT * 0.50)))
 
         # Display the instruction text on the screen
-        title_text = utils.MultiColorText("and press enter", pygame.font.Font(r"resources\fonts\square-deal.ttf", 50))
+        title_text = utils.MultiColorText("and press enter", pygame.font.Font(FONT_FILE, 50))
 
         self.screen.blit(title_text.full_text, ((SCREEN_WIDTH / 2) - (title_text.full_text.get_width() / 2), (SCREEN_HEIGHT * 0.70)))
 
@@ -352,6 +353,19 @@ clock = pygame.time.Clock()
 is_running = True
 
 game = Game()
+# Load the high scores from the save file
+if (os.path.isfile(SAVE_FILE)):
+    # Open the file if it already exists
+    shelf_file = shelve.open(SAVE_FILE)
+    game.high_scores = shelf_file['high_scores']
+    shelf_file.close()
+# Make sure that the snake directory is being found correctly
+elif (os.path.isdir(SNAKE_DIR)):
+    # Create the save file, and initialize it
+    shelf_file = shelve.open(SAVE_FILE)
+    shelf_file['high_scores'] = game.high_scores
+    shelf_file.close()
+
 
 while is_running:
 
@@ -367,6 +381,12 @@ while is_running:
     elif game.state == "new_score":
         fps = 10
         is_running = game.new_score()
+
+    # If the game is being quit then save the current high scores
+    if (not is_running):
+        shelf_file = shelve.open(SAVE_FILE)
+        shelf_file['high_scores'] = game.high_scores
+        shelf_file.close()
 
     pygame.display.flip()
     # Limit the frame rate to fps frames per second
