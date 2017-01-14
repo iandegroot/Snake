@@ -6,17 +6,25 @@ import os
 import snake_utils as utils
 from random import randint
 
-# Setup globals
+#### Setup globals ####
+
+# Directions
 UP = (0, -1)
 DOWN = (0, 1)
 LEFT = (-1, 0)
 RIGHT = (1, 0)
 
+# Commonly used colors
 WHITE = (255, 255, 255)
 GRAY = (50, 50, 50)
 GOLD = (255, 223, 0)
 BLACK = (0, 0, 0)
 
+# Window dimensions
+SCREEN_WIDTH = 640
+SCREEN_HEIGHT = 400
+
+# Resource paths
 SNAKE_DIR = os.path.dirname(os.path.realpath(__file__))
 FONT_FILE = SNAKE_DIR + r"\resources\fonts\square-deal.ttf"
 SAVE_FILE = SNAKE_DIR + r"\resources\high_scores\scores"
@@ -49,6 +57,7 @@ class Snake:
         self.color = WHITE
         #self.body = [pygame.Rect(x, y + (i * self.seg_size), self.seg_size, self.seg_size) for i in xrange(self.size)]
         self.body = [Segment(x, y + (i * self.seg_size), self.color, self.seg_size) for i in xrange(self.size)]
+        self.speed = 30
 
     # Sets the direction of the snake
     def direction(self, dir):
@@ -106,6 +115,10 @@ class Food:
         self.piece = pygame.Rect(randint(0, SCREEN_WIDTH - self.width), randint(0, SCREEN_HEIGHT - self.height), self.width, self.height)
         self.color = utils.rand_color()
 
+        # Each time a peice of food is created change the iocn to match the color of the food
+        icon.fill(self.color)
+        pygame.display.set_icon(icon)
+
     # Draw the piece of food on the given surface
     def draw(self, surface):
         pygame.draw.rect(surface, self.color, self.piece)
@@ -134,6 +147,7 @@ class Game:
         self.new_name = "???"
         self.new_name_index = 0
 
+    # Function that displays the menu
     def menu(self):
         self.screen.fill((0, 0, 0))
 
@@ -184,7 +198,8 @@ class Game:
                     return False
         return True
 
-    def run(self):
+    # Function that runs when the game is being played
+    def play(self):
         self.snake.move()
 
         if self.snake.crash():
@@ -201,7 +216,11 @@ class Game:
         if self.snake.ate(self.food):
             self.snake.add(self.food.color)
             self.food = Food()
+            # Every 10 scores, ramp up the speed
+            if self.snake.score % 5 == 0:
+                self.snake.speed += 2
 
+        # First draw the black background
         self.screen.fill((0, 0, 0))
         
         # Print the score to the screen, underneath (before) the snake and food
@@ -230,7 +249,7 @@ class Game:
 
         return True
 
-
+    # Function that displays the high scores
     def scores(self):
         self.screen.fill((0, 0, 0))
 
@@ -256,7 +275,7 @@ class Game:
 
         return True
 
-
+    # Function for submitting a new high score
     def new_score(self):
         self.screen.fill((0, 0, 0))
 
@@ -344,12 +363,15 @@ class Game:
 
 
 
-
-SCREEN_WIDTH = 640
-SCREEN_HEIGHT = 400
-
-
 clock = pygame.time.Clock()
+pygame.display.set_caption("snake")
+
+# Set the icon to be a square of random color
+icon = pygame.Surface((32, 32))
+icon.fill(utils.rand_color())
+pygame.display.set_icon(icon)
+
+# Initialize the state of the game to running
 is_running = True
 
 game = Game()
@@ -373,8 +395,8 @@ while is_running:
         fps = 10
         is_running = game.menu()
     elif game.state == "play":
-        fps = 30
-        is_running = game.run()
+        fps = game.snake.speed
+        is_running = game.play()
     elif game.state == "scores":
         fps = 10
         is_running = game.scores()
